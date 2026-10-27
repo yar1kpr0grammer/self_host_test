@@ -1,0 +1,34 @@
+name: Deploy to Pi
+on:
+  push:
+    branches: [ master ] # 如果你的分支是 main，请改为 main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 进入你 Pi 上存放源码的目录（注意是源码目录，不是 /var/www/html）
+            cd /home/pi/your-project-path
+
+            # 拉取最新代码
+            git pull origin master
+
+            # 如果只推送了源码，需要在这里重新构建并复制（假设使用 npm）
+            npm install
+            npm run build
+
+            # 将构建结果复制到 Nginx 目录
+            sudo cp -r dist/* /var/www/html/   # 如果是 build 文件夹，请改为 build
+
+            # 重启 Nginx（可选，静态文件通常不需要，但有备无患）
+            sudo systemctl restart nginx
