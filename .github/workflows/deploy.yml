@@ -22,7 +22,7 @@ jobs:
           script: |
             # 1. Переходим в папку с вашим исходным кодом на Raspberry Pi
             # ОБЯЗАТЕЛЬНО замените путь ниже на ваш реальный путь!
-            cd ~/.self_host_test
+            cd ~/self_host_test
 
             # 2. Получаем свежий код из репозитория
             git pull origin master
