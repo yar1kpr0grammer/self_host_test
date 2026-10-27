@@ -1,5 +1,11 @@
+import Header from "./componts/Header"
+import ChessGame from "./componts/chess/ChessGame"
+
 function App() {
-  return <h1>Hello world</h1>
+  return (<>
+    <Header />
+    <ChessGame/>
+  </>)
 }
 
 export default App
