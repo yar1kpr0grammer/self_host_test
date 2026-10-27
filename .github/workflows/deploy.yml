@@ -2,7 +2,7 @@ name: Deploy to Raspberry Pi
 
 on:
   push:
-    branches: [ "master" ] # Если ваша ветка называется main, замените на "main"
+    branches: [ "master" ]
 
 jobs:
   deploy:
@@ -20,26 +20,31 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 2222
           script: |
-            # 1. Переходим в папку с вашим исходным кодом на Raspberry Pi
-            # ОБЯЗАТЕЛЬНО замените путь ниже на ваш реальный путь!
+            set -e
+
+            # 1. Переходим в папку с исходным кодом
             cd ~/self_host_test
 
+            # 2. Синхронизируем код с GitHub (заменяет git pull)
+            echo "Fetching latest code..."
             git fetch --all
             git reset --hard origin/master
 
-            # 2. Получаем свежий код из репозитория
-            git pull origin master
-
-            # 3. Устанавливаем зависимости (если нужно)
+            # 3. Устанавливаем зависимости
+            echo "Installing dependencies..."
             npm install
 
             # 4. Собираем проект
+            echo "Building project..."
             npm run build
 
-            # 5. Копируем собранные файлы в папку Nginx
-            # Обратите внимание: если ваша папка сборки называется build (а не dist),
-            # измените "dist" на "build" в строке ниже.
+            # 5. Очищаем старые файлы в Nginx и копируем новые
+            echo "Deploying to Nginx..."
+            sudo rm -rf /var/www/html/*
             sudo cp -r dist/* /var/www/html/
 
-            # 6. Перезапускаем Nginx (опционально, но полезно)
+            # 6. Перезапускаем Nginx
+            echo "Restarting Nginx..."
             sudo systemctl restart nginx
+
+            echo "Deployment successful!"
