@@ -1,34 +1,42 @@
-name: Deploy to Pi
+name: Deploy to Raspberry Pi
+
 on:
   push:
-    branches: [ master ] # 如果你的分支是 main，请改为 main
+    branches: [ "master" ] # Если ваша ветка называется main, замените на "main"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 2222
           script: |
-            # 进入你 Pi 上存放源码的目录（注意是源码目录，不是 /var/www/html）
-            cd /home/pi/your-project-path
+            # 1. Переходим в папку с вашим исходным кодом на Raspberry Pi
+            # ОБЯЗАТЕЛЬНО замените путь ниже на ваш реальный путь!
+            cd ~/.self_host_test
 
-            # 拉取最新代码
+            # 2. Получаем свежий код из репозитория
             git pull origin master
 
-            # 如果只推送了源码，需要在这里重新构建并复制（假设使用 npm）
+            # 3. Устанавливаем зависимости (если нужно)
             npm install
+
+            # 4. Собираем проект
             npm run build
 
-            # 将构建结果复制到 Nginx 目录
-            sudo cp -r dist/* /var/www/html/   # 如果是 build 文件夹，请改为 build
+            # 5. Копируем собранные файлы в папку Nginx
+            # Обратите внимание: если ваша папка сборки называется build (а не dist),
+            # измените "dist" на "build" в строке ниже.
+            sudo cp -r dist/* /var/www/html/
 
-            # 重启 Nginx（可选，静态文件通常不需要，但有备无患）
+            # 6. Перезапускаем Nginx (опционально, но полезно)
             sudo systemctl restart nginx
