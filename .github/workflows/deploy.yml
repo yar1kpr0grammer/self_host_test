@@ -24,6 +24,9 @@ jobs:
             # ОБЯЗАТЕЛЬНО замените путь ниже на ваш реальный путь!
             cd ~/self_host_test
 
+            git fetch --all
+            git reset --hard origin/master
+
             # 2. Получаем свежий код из репозитория
             git pull origin master
 
