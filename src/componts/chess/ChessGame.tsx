@@ -1,229 +1,224 @@
 import { useState } from "react";
 import { Chess, type Square } from "chess.js";
 import ChessBoard from "./ChessBoard";
-import MoveHistory from "./MoveHistory";
+import MoveHistory from "./moveHistory/MoveHistory";
 import GameControls from "./GameControls";
-import type {MoveRecord, PendingPromotion } from "./chess.types";
+import type { MoveRecord, PendingPromotion } from "./chess.types";
 import PromotionModal from "./PromotionModal";
 import type { PromotionPiece } from "./chess.types";
-import Toast from "../MessageBox";
+import Toast from "../Toast";
 
 function createInitialHistory(): MoveRecord[] {
-  return [
-    {
-      fen: new Chess().fen(),
-      san: null,
-      color: null,
-    },
-  ];
+	return [
+		{
+			fen: new Chess().fen(),
+			san: null,
+			color: null,
+		},
+	];
 }
 
 export default function ChessGame() {
-  const [history, setHistory] = useState<MoveRecord[]>(createInitialHistory);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null);
-  const [message, setMessage] = useState<string|null>();
+	const [history, setHistory] = useState<MoveRecord[]>(createInitialHistory);
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+	const [pendingPromotion, setPendingPromotion] =
+		useState<PendingPromotion | null>(null);
+	const [message, setMessage] = useState<string | null>();
 
-  const game = new Chess(history[currentIndex].fen);
-  const availableMoves = selectedSquare
-    ? game.moves({
-        square: selectedSquare,
-        verbose: true,
-      })
-    : [];
+	const game = new Chess(history[currentIndex].fen);
 
-  const legalTargets = availableMoves.map((move) => move.to);
+	// после объявления game
+	const kingInCheckSquare: Square | null = (() => {
+		if (!game.isCheck()) return null;
 
-  const captureTargets = availableMoves
-    .filter((move) => move.isCapture() || move.isEnPassant())
-    .map((move) => move.to);
+		const turn = game.turn();
+		const board = game.board();
 
+		for (const row of board) {
+			for (const cell of row) {
+				if (cell && cell.type === "k" && cell.color === turn) {
+					return cell.square;
+				}
+			}
+		}
+		return null;
+	})();
 
-  function makeMove(
-    from: Square,
-    to: Square,
-    promotion?: PromotionPiece
-  ): boolean {
-    const nextGame = new Chess(history[currentIndex].fen);
+	const availableMoves = selectedSquare
+		? game.moves({
+				square: selectedSquare,
+				verbose: true,
+			})
+		: [];
 
-    try {
-      // Проверяем, является ли выбранный ход превращением пешки
-      const candidate = nextGame
-        .moves({ square: from, verbose: true })
-        .find((move) => move.to === to);
+	const legalTargets = availableMoves.map((move) => move.to);
 
-      if (candidate?.promotion && !promotion) {
-        setPendingPromotion({
-          from,
-          to,
-          color: nextGame.turn(),
-        });
+	const captureTargets = availableMoves
+		.filter((move) => move.isCapture() || move.isEnPassant())
+		.map((move) => move.to);
 
-        setSelectedSquare(null);
-        setMessage("Выберите фигуру для превращения");
-        return false;
-      }
+	function makeMove(
+		from: Square,
+		to: Square,
+		promotion?: PromotionPiece,
+	): boolean {
+		const nextGame = new Chess(history[currentIndex].fen);
 
-      const move = nextGame.move({
-        from,
-        to,
-        ...(promotion ? { promotion } : {}),
-      });
+		try {
+			// Проверяем, является ли выбранный ход превращением пешки
+			const candidate = nextGame
+				.moves({ square: from, verbose: true })
+				.find((move) => move.to === to);
 
-      const nextHistory = history.slice(0, currentIndex + 1);
+			if (candidate?.promotion && !promotion) {
+				setPendingPromotion({
+					from,
+					to,
+					color: nextGame.turn(),
+				});
 
-      nextHistory.push({
-        fen: nextGame.fen(),
-        san: move.san,
-        color: move.color,
-        from: move.from,
-        to: move.to,
-      });
+				setSelectedSquare(null);
+				setMessage("Выберите фигуру для превращения");
+				return false;
+			}
 
-      setHistory(nextHistory);
-      setCurrentIndex(nextHistory.length - 1);
-      setSelectedSquare(null);
-      setPendingPromotion(null);
+			const move = nextGame.move({
+				from,
+				to,
+				...(promotion ? { promotion } : {}),
+			});
 
-      setMessage(
-        nextGame.isCheckmate()
-          ? `Мат! ${move.color === "w" ? "Белые" : "Чёрные"} победили`
-          : nextGame.isDraw()
-            ? "Ничья"
-            : nextGame.isCheck()
-              ? "Шах!"
-              : ""
-      );
+			const nextHistory = history.slice(0, currentIndex + 1);
 
-      return true;
-    } catch {
-      setMessage("Недопустимый ход");
-      return false;
-    }
-  }
+			nextHistory.push({
+				fen: nextGame.fen(),
+				san: move.san,
+				color: move.color,
+				from: move.from,
+				to: move.to,
+			});
 
-  function handlePromotion(piece: PromotionPiece) {
-    if (!pendingPromotion) return;
+			setHistory(nextHistory);
+			setCurrentIndex(nextHistory.length - 1);
+			setSelectedSquare(null);
+			setPendingPromotion(null);
 
-    makeMove(
-      pendingPromotion.from,
-      pendingPromotion.to,
-      piece
-    );
-  }
+			setMessage(
+				nextGame.isCheckmate()
+					? `Мат! ${move.color === "w" ? "Белые" : "Чёрные"} победили`
+					: nextGame.isDraw()
+						? "Ничья"
+						: nextGame.isCheck()
+							? "Шах!"
+							: "",
+			);
 
-  function handleSquareClick(squareString: string) {
-    const square = squareString as Square;
-    const piece = game.get(square);
+			return true;
+		} catch {
+			setMessage("Недопустимый ход");
+			return false;
+		}
+	}
 
-    if (selectedSquare === null) {
-      if (piece && piece.color === game.turn()) {
-        setSelectedSquare(square);
-        setMessage(`Выбрана клетка ${square}`);
-      }
-      return;
-    }
+	function handlePromotion(piece: PromotionPiece) {
+		if (!pendingPromotion) return;
 
-    if (selectedSquare === square) {
-      setSelectedSquare(null);
-      return;
-    }
+		makeMove(pendingPromotion.from, pendingPromotion.to, piece);
+	}
 
-    if (piece && piece.color === game.turn()) {
-      setSelectedSquare(square);
-      return;
-    }
+	function handleSquareClick(squareString: string) {
+		const square = squareString as Square;
+		const piece = game.get(square);
 
-    makeMove(selectedSquare, square);
-  }
+		// Выбираем свою фигуру и показываем возможные ходы
+		if (piece && piece.color === game.turn()) {
+			setSelectedSquare(square);
+			setMessage(null);
+			return;
+		}
 
-  function handlePieceDrop(
-    sourceSquare: string,
-    targetSquare: string
-  ): boolean {
-    return makeMove(
-      sourceSquare as Square,
-      targetSquare as Square
-    );
-  }
+		// Снимаем выделение, если нажали на уже выбранную клетку
+		if (selectedSquare === square) {
+			setSelectedSquare(null);
+			return;
+		}
 
-  function goTo(index: number) {
-    const safeIndex = Math.max(
-      0,
-      Math.min(index, history.length - 1)
-    );
+		// Если фигура выбрана — пробуем сделать ход
+		if (selectedSquare) {
+			makeMove(selectedSquare, square);
+		}
+	}
 
-    setPendingPromotion(null);
-    setCurrentIndex(safeIndex);
-    setSelectedSquare(null);
-  }
+	function handlePieceDrop(
+		sourceSquare: string,
+		targetSquare: string,
+	): boolean {
+		return makeMove(sourceSquare as Square, targetSquare as Square);
+	}
 
-  function restart() {
-    setHistory(createInitialHistory());
-    setCurrentIndex(0);
-    setSelectedSquare(null);
-    setMessage(null);
-    setPendingPromotion(null);
-  }
+	function goTo(index: number) {
+		const safeIndex = Math.max(0, Math.min(index, history.length - 1));
 
-  const currentMove = history[currentIndex];
+		setPendingPromotion(null);
+		setCurrentIndex(safeIndex);
+		setSelectedSquare(null);
+	}
 
-  const lastMove =
-    currentMove?.from && currentMove?.to
-      ? {
-          from: currentMove.from,
-          to: currentMove.to,
-        }
-      : null;
+	function restart() {
+		setHistory(createInitialHistory());
+		setCurrentIndex(0);
+		setSelectedSquare(null);
+		setMessage(null);
+		setPendingPromotion(null);
+	}
 
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns:
-          "minmax(0, 2fr) minmax(220px, 1fr)",
-        gap: 20,
-        alignItems: "start",
-        maxWidth: 1000,
-        width: "100%",
-        margin: "0 auto",
-      }}
-    >
-      <section style={{ minWidth: 0 }}>
-        {message && <Toast message={message} />}
+	const currentMove = history[currentIndex];
 
-        <ChessBoard
-          fen={history[currentIndex].fen}
-          selectedSquare={selectedSquare}
-          legalTargets={legalTargets}
-          captureTargets={captureTargets}
-          lastMove={lastMove}
-          onSquareClick={handleSquareClick}
-          onPieceDrop={handlePieceDrop}
-        />
+	const lastMove =
+		currentMove?.from && currentMove?.to
+			? {
+					from: currentMove.from,
+					to: currentMove.to,
+				}
+			: null;
 
-        <GameControls
-          currentIndex={currentIndex}
-          totalMoves={history.length - 1}
-          onNavigate={goTo}
-          onRestart={restart}
-        />
-      </section>
+	return (
+		<div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3">
+			{message && <Toast message={message} onClose={() => setMessage(null)} />}
 
-      <MoveHistory
-        history={history}
-        currentIndex={currentIndex}
-        onMoveClick={goTo}
-      />
+			<ChessBoard
+				fen={history[currentIndex].fen}
+				selectedSquare={selectedSquare}
+				legalTargets={legalTargets}
+				captureTargets={captureTargets}
+				lastMove={lastMove}
+				onSquareClick={handleSquareClick}
+				onPieceDrop={handlePieceDrop}
+				kingInCheckSquare={kingInCheckSquare}
+			/>
 
-      {pendingPromotion && (
-        <PromotionModal
-          color={pendingPromotion.color}
-          onSelect={handlePromotion}
-        />
-      )}
+			<aside className="flex flex-col md:flex-col-reverse h-full">
+				<GameControls
+					currentIndex={currentIndex}
+					totalMoves={history.length - 1}
+					onNavigate={goTo}
+					onRestart={restart}
+				/>
 
-    </div>
-  );
+				<MoveHistory
+					history={history}
+					currentIndex={currentIndex}
+					onMoveClick={goTo}
+				/>
+			</aside>
+
+			{pendingPromotion && (
+				<PromotionModal
+					color={pendingPromotion.color}
+					onSelect={handlePromotion}
+				/>
+			)}
+		</div>
+	);
 }

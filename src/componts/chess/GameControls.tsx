@@ -1,49 +1,44 @@
-
 import type { GameControlsProps } from "./chess.types";
+import {
+	MoveLeft,
+	MoveRight,
+	RefreshCw,
+	ArrowBigRightDash,
+} from "lucide-react";
+import IconButton from "../IconButton";
 
 export default function GameControls({
-  currentIndex,
-  totalMoves,
-  onNavigate,
-  onRestart,
+	currentIndex,
+	totalMoves,
+	onNavigate,
+	onRestart,
 }: GameControlsProps) {
-  const isFirst = currentIndex === 0;
-  const isLatest = currentIndex === totalMoves;
+	const isFirst = currentIndex === 0;
+	const isLatest = currentIndex === totalMoves;
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 8,
-        marginTop: 12,
-      }}
-    >
+	return (
+		<div className="flex justify-between gap-3 m-6">
+			<IconButton
+				onClick={() => onNavigate(currentIndex - 1)}
+				disabled={isFirst}
+			>
+				<MoveLeft />
+			</IconButton>
 
-      <button
-        onClick={() => onNavigate(currentIndex - 1)}
-        disabled={isFirst}
-      >
-        ← Назад
-      </button>
+			<IconButton
+				onClick={() => onNavigate(currentIndex + 1)}
+				disabled={isLatest}
+			>
+				<MoveRight />
+			</IconButton>
 
-      <button
-        onClick={() => onNavigate(currentIndex + 1)}
-        disabled={isLatest}
-      >
-        Вперёд →
-      </button>
+			<IconButton onClick={() => onNavigate(totalMoves)} disabled={isLatest}>
+				<ArrowBigRightDash />
+			</IconButton>
 
-      <button
-        onClick={() => onNavigate(totalMoves)}
-        disabled={isLatest}
-      >
-        ⏭ Сейчас
-      </button>
-
-      <button onClick={onRestart}>
-        Новая партия
-      </button>
-    </div>
-  );
+			<IconButton onClick={onRestart}>
+				<RefreshCw />
+			</IconButton>
+		</div>
+	);
 }

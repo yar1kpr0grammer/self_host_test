@@ -1,3 +1,44 @@
-body{
-    font-family: "Arial";
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+	--color-background: white;
+	--color-text: black;
+	--color-foreground: lightgray;
+	--color-foreground-disabled: gray;
+	--color-active: lightblue;
+	--color-active-text: black;
+	--color-disabled-text: #fdfdfd;
+}
+
+[data-theme="dark"] {
+	--color-background: #0a0a0a;
+	--color-text: white;
+	--color-text-active: 0a0a0a;
+	--color-foreground: #fdfdfd51;
+	--color-foreground: #cacaca51;
+	--color-active: #b6ff00;
+	--color-active-text: #0a0a0a;
+	--color-disabled-text: #7c7a7a;
+}
+
+main {
+	@apply p-5;
+}
+body {
+	@apply font-sans bg-background text-text;
+}
+h1 {
+	@apply text-3xl font-bold;
+}
+a {
+	@apply text-blue-300 italic hover:underline cursor-pointer;
+}
+button {
+	@apply bg-foreground rounded-full py-2 px-5 cursor-pointer shadow-lg disabled:scale-100! disabled:cursor-not-allowed disabled:bg-foreground-disabled disabled:text-disabled-text hover:scale-110 hover:shadow-2xl active:scale-95 duration-100;
+}
+
+td {
+	@apply px-3 py-1;
 }

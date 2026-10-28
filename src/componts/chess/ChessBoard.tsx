@@ -2,69 +2,80 @@ import { Chessboard } from "react-chessboard";
 import type { ChessBoardProps } from "./chess.types";
 
 export default function ChessBoard({
-  fen,
-  selectedSquare,
-  legalTargets,
-  captureTargets,
-  lastMove,
-  onSquareClick,
-  onPieceDrop,
+	fen,
+	selectedSquare,
+	legalTargets,
+	captureTargets,
+	lastMove,
+	onSquareClick,
+	onPieceDrop,
+	kingInCheckSquare,
 }: ChessBoardProps) {
+	const squareStyles: Record<string, React.CSSProperties> = {};
 
-  const squareStyles: Record<string, React.CSSProperties> = {};
+	if (lastMove) {
+		squareStyles[lastMove.from] = {
+			backgroundColor: "rgba(255, 235, 59, 0.45)",
+		};
 
-  if (lastMove) {
-    squareStyles[lastMove.from] = {
-      backgroundColor: "rgba(255, 235, 59, 0.45)",
-    };
+		squareStyles[lastMove.to] = {
+			backgroundColor: "rgba(255, 235, 59, 0.65)",
+		};
+	}
 
-    squareStyles[lastMove.to] = {
-      backgroundColor: "rgba(255, 235, 59, 0.65)",
-    };
-  }
+	if (kingInCheckSquare) {
+		squareStyles[kingInCheckSquare] = {
+			backgroundColor: "rgba(239, 68, 68, 0.75)", // насыщенный красный
+			boxShadow: "inset 0 0 0 3px rgba(185, 28, 28, 0.9)",
+		};
+	}
 
-  if (selectedSquare) {
-    squareStyles[selectedSquare] = {
-      ...squareStyles[selectedSquare],
-      backgroundColor: "rgba(33, 150, 243, 0.5)",
-    };
-  }
+	if (selectedSquare) {
+		squareStyles[selectedSquare] = {
+			...squareStyles[selectedSquare],
+			backgroundColor: "rgba(33, 150, 243, 0.5)",
+		};
+	}
 
-  for (const square of legalTargets) {
-    if (captureTargets.includes(square)) {
-      // клетка с фигурой-целью — заливаем целиком красным, без кружка
-      squareStyles[square] = {
-        ...squareStyles[square],
-        backgroundColor: "rgba(220, 38, 38, 0.55)",
-      };
-    } else {
-      // пустая клетка — оставляем зелёный кружок-точку
-      squareStyles[square] = {
-        ...squareStyles[square],
-        background: "radial-gradient(circle, rgba(22, 163, 74, 0.55) 20%, transparent 22%)",
-      };
-    }
-  }
+	for (const square of legalTargets) {
+		if (captureTargets.includes(square)) {
+			// клетка с фигурой-целью — заливаем целиком красным, без кружка
+			squareStyles[square] = {
+				...squareStyles[square],
+				backgroundColor: "rgba(220, 38, 38, 0.55)",
+			};
+		} else {
+			// пустая клетка — оставляем зелёный кружок-точку
+			squareStyles[square] = {
+				...squareStyles[square],
+				background:
+					"radial-gradient(circle, rgba(22, 163, 74, 0.55) 20%, transparent 22%)",
+			};
+		}
+	}
 
-  return (
-    <Chessboard
-      options={{
-        position: fen,
-        squareStyles,
+	return (
+		<Chessboard
+			options={{
+				position: fen,
+				squareStyles,
 
-        onSquareClick: ({ square }) => {
-          console.log("Chessboard click:", square);
-          onSquareClick(square);
-        },
+				onSquareClick: ({ square }) => {
+					onSquareClick(square);
+				},
 
-        onPieceDrop: ({ sourceSquare, targetSquare }) => {
-          console.log("Chessboard drop:", sourceSquare, targetSquare);
+				onPieceDrag: ({ square }) => {
+					if (square) {
+						onSquareClick(square);
+					}
+				},
 
-          if (!targetSquare) return false;
+				onPieceDrop: ({ sourceSquare, targetSquare }) => {
+					if (!targetSquare) return false;
 
-          return onPieceDrop(sourceSquare, targetSquare);
-        },
-      }}
-    />
-  );
+					return onPieceDrop(sourceSquare, targetSquare);
+				},
+			}}
+		/>
+	);
 }
