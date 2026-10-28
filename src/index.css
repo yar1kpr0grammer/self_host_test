@@ -16,11 +16,11 @@
 	--color-background: #0a0a0a;
 	--color-text: white;
 	--color-text-active: 0a0a0a;
-	--color-foreground: #fdfdfd51;
 	--color-foreground: #cacaca51;
 	--color-active: #b6ff00;
 	--color-active-text: #0a0a0a;
-	--color-disabled-text: #7c7a7a;
+	--color-foreground-disabled: #2c2c2c;
+	--color-disabled-text: #7a7a7a;
 }
 
 main {
