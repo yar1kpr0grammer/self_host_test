@@ -9,7 +9,7 @@
 	--color-foreground-disabled: gray;
 	--color-active: lightblue;
 	--color-active-text: black;
-	--color-disabled-text: #fdfdfd;
+	--color-disabled-text: #black;
 }
 
 [data-theme="dark"] {
@@ -41,4 +41,8 @@ button {
 
 td {
 	@apply px-3 py-1;
+}
+
+.page {
+	@apply h-screen max-h-screen;
 }

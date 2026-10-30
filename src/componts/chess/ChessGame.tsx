@@ -184,21 +184,23 @@ export default function ChessGame() {
 			: null;
 
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3">
+		<div className="grid grid-cols-1 md:grid-cols-2 items-start gap-3 h-full min-h-0 overflow-hidden">
 			{message && <Toast message={message} onClose={() => setMessage(null)} />}
 
-			<ChessBoard
-				fen={history[currentIndex].fen}
-				selectedSquare={selectedSquare}
-				legalTargets={legalTargets}
-				captureTargets={captureTargets}
-				lastMove={lastMove}
-				onSquareClick={handleSquareClick}
-				onPieceDrop={handlePieceDrop}
-				kingInCheckSquare={kingInCheckSquare}
-			/>
+			<div className="w-full min-w-0">
+				<ChessBoard
+					fen={history[currentIndex].fen}
+					selectedSquare={selectedSquare}
+					legalTargets={legalTargets}
+					captureTargets={captureTargets}
+					lastMove={lastMove}
+					onSquareClick={handleSquareClick}
+					onPieceDrop={handlePieceDrop}
+					kingInCheckSquare={kingInCheckSquare}
+				/>
+			</div>
 
-			<aside className="flex flex-col md:flex-col-reverse h-full">
+			<aside className="flex flex-col-reverse h-full min-h-0 overflow-hidden">
 				<GameControls
 					currentIndex={currentIndex}
 					totalMoves={history.length - 1}
@@ -206,11 +208,13 @@ export default function ChessGame() {
 					onRestart={restart}
 				/>
 
-				<MoveHistory
-					history={history}
-					currentIndex={currentIndex}
-					onMoveClick={goTo}
-				/>
+				<div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-none">
+					<MoveHistory
+						history={history}
+						currentIndex={currentIndex}
+						onMoveClick={goTo}
+					/>
+				</div>
 			</aside>
 
 			{pendingPromotion && (

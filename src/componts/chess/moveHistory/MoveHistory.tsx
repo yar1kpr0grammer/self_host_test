@@ -10,17 +10,17 @@ export default function MoveHistory({
 	const rowCount = Math.ceil(moves.length / 2);
 
 	return rowCount === 0 ? (
-		<div className="flex items-center justify-center h-full">
-			<p>Пока нет ходов</p>
+		<div className="h-full flex items-center justify-center">
+			<p className="text-foreground">Пока нет ходов</p>
 		</div>
 	) : (
-		<table className="table-fixed ">
+		<table className="w-full table-fixed scrollbar-none">
 			<colgroup>
 				<col className="w-10" />
 				<col />
 				<col />
 			</colgroup>
-			<thead>
+			<thead className="sticky top-0 bg-background z-2">
 				<tr>
 					<td className="text-center font-bold">№</td>
 					<td className="text-center font-bold">Белые</td>

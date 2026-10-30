@@ -37,7 +37,7 @@ export default function GameControls({
 			</IconButton>
 
 			<IconButton onClick={onRestart}>
-				<RefreshCw />
+				<RefreshCw className="active:animate-spin" />
 			</IconButton>
 		</div>
 	);
